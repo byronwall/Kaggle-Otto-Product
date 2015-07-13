@@ -6,18 +6,24 @@
 source(file = "FUNC, nnet eval.R")
 
 #create the grouped classes for testing
-groups = factor(paste0("C", 1:2))
-group = sample(groups, 9, replace=T)
 
-runs = 1:500
+runs = 1:1
 
 results = NULL
 
 for(run in runs){
+
+  groups = factor(paste0("C", 1:2))
+  group = sample(groups, 9, replace=T)  
   
   #choose the features to include
   keep_max = 4:10
-  keeps = sample(93,sample(keep_max, 1)) 
+  keep_count = sample(keep_max, 1)
   
-  results = rbind(results, as.data.frame(eval_combo(group, keeps, 0.1)))
+  #sample on its own just randomizes a vector
+  keeps = sample(c( rep(1, keep_count), rep(0, 93-keep_count)))
+  
+  results = rbind(results,
+                  data.frame(as.data.frame(eval_combo(group, 0.1)), 
+                    group=paste0(group, collapse="-")))
 }

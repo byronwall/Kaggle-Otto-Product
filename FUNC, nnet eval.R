@@ -1,5 +1,5 @@
 
-eval_combo = function(group, keeps, cut=0.2){
+eval_combo = function(group, cut=0.2){
   
   library(caret)
   library(klaR)
@@ -21,9 +21,8 @@ eval_combo = function(group, keeps, cut=0.2){
   data.use$id = NULL
   data.use$target = NULL
   
-  #now we need to pick some features
-  feats = c(colnames(data.use)[keeps], "group.include")
-  data.use = data.use[,feats]
+  #now we need to pick some features  
+  #ensure that group.include is included
   
   inTraining = createDataPartition(data.use$group.include, p=0.8, list=F)
   training = data.use[inTraining,]
@@ -32,15 +31,16 @@ eval_combo = function(group, keeps, cut=0.2){
   ctrl = trainControl(method="cv", number=3, classProbs = TRUE, summaryFunction = LogLosSummary)
   #kknn grid = data.frame(kmax=c(15,25), distance=2, kernel="optimal")
   #pcaNNet
-  grid = data.frame(size=keep_count, decay=0.1)
+  grid = expand.grid(.nprune = c(30),.degree = c(1))
+  grid = expand.grid(.mtry = c(20))
   
   model = train(group.include ~ ., data = training,
-                method="nnet",
+                method="rf",
                 metric = "LogLoss",
                 maximize = FALSE,
                 trControl = ctrl,
-                tuneGrid = grid, #nnet params below
-                MaxNWts = 2000, trace=F)
+                tuneGrid = grid #nnet params below
+                )
   
   confused = confusionMatrix(test$group.include, predict(model, newdata=test, type="raw"))
   
